@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+build/
+dist/
+
+# Secrets & local user data (NEVER commit credentials)
+.yafu2ebay/
+*.key
+*.fernet
+secrets.yaml
+.env
+
+# Virtualenv
+.venv/
+venv/
+
+# OS
+.DS_Store
