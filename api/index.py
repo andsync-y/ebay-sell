@@ -16,12 +16,13 @@ os.environ["YAFU2EBAY_HOME"] = "/tmp/yafu2ebay"
 os.environ.setdefault("HOME", "/tmp")         # extra safety for any lib using HOME
 # ────────────────────────────────────────────────────────────────────────────
 
+import json
 import traceback
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from flask import Flask, jsonify, request
+from flask import Flask, Response, jsonify, request, stream_with_context
 
 from src.auth.credentials import MemoryStore
 from src.config import Config
@@ -63,7 +64,12 @@ def _plan_to_dict(plan) -> dict:
         "currency": plan.currency,
         "warnings": plan.warnings,
         "description": plan.description,
+        "category": plan.item.category,
     }
+
+
+def _sse(obj: dict) -> str:
+    return f"data: {json.dumps(obj, ensure_ascii=False)}\n\n"
 
 
 # --------------------------------------------------------------------------- #
@@ -96,6 +102,62 @@ def debug():
 @app.route("/api/sources")
 def sources():
     return jsonify({"sources": available_sources()})
+
+
+@app.route("/api/run/stream", methods=["POST"])
+def run_stream():
+    """SSE endpoint — streams progress events then a final 'done' event."""
+    data = request.get_json(silent=True) or {}
+    sources_list = data.get("sources") or [data.get("source", "rakuten")]
+    if isinstance(sources_list, str):
+        sources_list = [sources_list]
+    categories = set(data.get("categories") or [])
+    dest    = data.get("dest", "US")
+    keyword = data.get("keyword") or None
+    limit   = int(data.get("limit", 20))
+
+    @stream_with_context
+    def generate():
+        all_plans = []
+        all_counts = {"auto_publish": 0, "draft_pending_photo": 0, "skip": 0}
+        usd_jpy = None
+        fx_source = None
+
+        for i, source_name in enumerate(sources_list):
+            yield _sse({"type": "progress", "source": source_name,
+                        "step": i, "total": len(sources_list)})
+            try:
+                pipeline = _make_pipeline()
+                plans = pipeline.run(source_name=source_name, dest_country=dest,
+                                     keyword=keyword, limit=limit, publish=False)
+                if categories:
+                    plans = [p for p in plans if p.item.category in categories]
+                for p in plans:
+                    all_counts[p.action] = all_counts.get(p.action, 0) + 1
+                all_plans.extend(plans)
+                if pipeline.usd_jpy:
+                    usd_jpy = pipeline.usd_jpy
+                    fx_source = pipeline.fx_source
+                yield _sse({"type": "source_done", "source": source_name,
+                            "count": len(plans)})
+            except Exception as exc:
+                yield _sse({"type": "source_error", "source": source_name,
+                            "error": str(exc), "trace": traceback.format_exc()})
+
+        yield _sse({
+            "type": "done",
+            "ok": True,
+            "usd_jpy": usd_jpy,
+            "fx_source": fx_source,
+            "counts": all_counts,
+            "plans": [_plan_to_dict(p) for p in all_plans],
+        })
+
+    return Response(
+        generate(),
+        mimetype="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @app.route("/api/run", methods=["POST"])

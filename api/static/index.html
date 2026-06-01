@@ -19,93 +19,113 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
 
-    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
-    header h1 { font-size: 1.2rem; font-weight: 700; }
-    header span { color: var(--muted); font-size: 0.85rem; }
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; gap: 12px; }
+    header h1 { font-size: 1.15rem; font-weight: 700; }
+    header span { color: var(--muted); font-size: 0.82rem; }
 
-    nav { display: flex; gap: 4px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface); overflow-x: auto; }
-    nav button { background: none; border: 1px solid var(--border); color: var(--muted); padding: 8px 16px; border-radius: 8px; cursor: pointer; white-space: nowrap; font-size: 0.9rem; transition: all .15s; }
+    nav { display: flex; align-items: center; gap: 4px; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--surface); overflow-x: auto; }
+    nav button { background: none; border: 1px solid var(--border); color: var(--muted); padding: 7px 14px; border-radius: 8px; cursor: pointer; white-space: nowrap; font-size: 0.88rem; transition: all .15s; }
     nav button.active, nav button:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .running-badge { margin-left: auto; font-size: 0.72rem; padding: 4px 10px; background: rgba(59,130,246,0.15); border: 1px solid var(--accent); border-radius: 20px; color: var(--accent); white-space: nowrap; animation: pulse 1.5s infinite; flex-shrink: 0; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
 
-    main { padding: 16px; max-width: 900px; margin: 0 auto; }
+    main { padding: 14px; max-width: 900px; margin: 0 auto; }
 
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-    .card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 12px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+    .card h2 { font-size: 0.95rem; font-weight: 600; margin-bottom: 12px; }
 
-    .form-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-    .form-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 120px; }
-    label { font-size: 0.75rem; color: var(--muted); }
-    input, select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 8px 10px; border-radius: 8px; font-size: 0.9rem; }
+    /* ── Checkbox groups ── */
+    .section-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; display: block; }
+    .check-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .check-pill { display: flex; align-items: center; gap: 5px; font-size: 0.84rem; cursor: pointer; padding: 6px 11px; border: 1px solid var(--border); border-radius: 20px; user-select: none; transition: all .15s; }
+    .check-pill:has(input:checked) { border-color: var(--accent); background: rgba(59,130,246,0.12); color: #fff; }
+    .check-pill input { width: 14px; height: 14px; cursor: pointer; accent-color: var(--accent); }
+
+    /* ── Form controls ── */
+    .form-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 110px; }
+    label.field-label { font-size: 0.72rem; color: var(--muted); }
+    input, select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 7px 10px; border-radius: 8px; font-size: 0.88rem; }
     input:focus, select:focus { outline: none; border-color: var(--accent); }
 
     .btn { background: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600; width: 100%; transition: opacity .15s; }
     .btn:hover { opacity: 0.85; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
     .btn.green { background: var(--accent2); }
 
+    /* ── Progress ── */
+    .progress-card { background: var(--surface); border: 1px solid var(--accent); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+    .progress-steps { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+    .step { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; }
+    .step-icon { font-size: 1rem; line-height: 1; }
+    .progress-track { background: var(--bg); border-radius: 4px; height: 7px; overflow: hidden; margin-bottom: 7px; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 4px; width: 0%; transition: width 0.5s ease; }
+    .progress-text { font-size: 0.76rem; color: var(--muted); }
+
+    /* ── Stats ── */
     .stats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
     .stat { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; text-align: center; flex: 1; min-width: 80px; }
-    .stat .val { font-size: 1.4rem; font-weight: 700; }
-    .stat .lbl { font-size: 0.7rem; color: var(--muted); }
+    .stat .val { font-size: 1.35rem; font-weight: 700; }
+    .stat .lbl { font-size: 0.68rem; color: var(--muted); }
     .stat.green .val { color: var(--accent2); }
     .stat.yellow .val { color: var(--warn); }
     .stat.red .val { color: var(--danger); }
 
+    /* ── Plan cards ── */
     .plan-list { display: flex; flex-direction: column; gap: 8px; }
-    .plan { border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+    .plan { border: 1px solid var(--border); border-radius: 10px; padding: 11px; }
     .plan.auto_publish { border-left: 3px solid var(--accent2); }
     .plan.draft_pending_photo { border-left: 3px solid var(--warn); }
     .plan.skip { border-left: 3px solid var(--danger); opacity: 0.7; }
     .plan-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-    .plan-title { font-size: 0.9rem; font-weight: 600; flex: 1; }
-    .badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+    .plan-title { font-size: 0.88rem; font-weight: 600; flex: 1; }
+    .badge { font-size: 0.68rem; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
     .badge.auto_publish { background: #065f46; color: #6ee7b7; }
     .badge.draft_pending_photo { background: #78350f; color: #fde68a; }
     .badge.skip { background: #450a0a; color: #fca5a5; }
-    .plan-meta { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
-    .plan-warn { font-size: 0.75rem; color: var(--warn); margin-top: 4px; }
+    .plan-meta { font-size: 0.76rem; color: var(--muted); margin-top: 4px; }
+    .plan-warn { font-size: 0.73rem; color: var(--warn); margin-top: 3px; }
+    .preview-btn { margin-top: 7px; background: none; border: 1px solid var(--border); color: var(--muted); padding: 3px 9px; border-radius: 6px; cursor: pointer; font-size: 0.72rem; }
+    .preview-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+    /* ── Orders / Sync ── */
     .order-card { border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 8px; }
-    .order-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; }
-    .order-meta { font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; }
-    .order-link { display: inline-block; background: var(--accent2); color: #fff; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; text-decoration: none; font-weight: 600; }
-
-    .sync-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+    .order-title { font-weight: 600; font-size: 0.88rem; margin-bottom: 6px; }
+    .order-meta { font-size: 0.78rem; color: var(--muted); margin-bottom: 8px; }
+    .order-link { display: inline-block; background: var(--accent2); color: #fff; padding: 5px 13px; border-radius: 8px; font-size: 0.78rem; text-decoration: none; font-weight: 600; }
+    .sync-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.83rem; }
     .sync-row:last-child { border-bottom: none; }
-    .sync-action { font-size: 0.75rem; padding: 2px 8px; border-radius: 20px; }
+    .sync-action { font-size: 0.73rem; padding: 2px 8px; border-radius: 20px; }
     .sync-action.keep { background: #065f46; color: #6ee7b7; }
     .sync-action.end  { background: #450a0a; color: #fca5a5; }
     .sync-action.reprice { background: #1e3a5f; color: #93c5fd; }
 
-    .loader { text-align: center; padding: 32px; color: var(--muted); }
-    .empty { text-align: center; padding: 32px; color: var(--muted); }
-    .error { background: #450a0a; border: 1px solid #7f1d1d; border-radius: 8px; padding: 12px; color: #fca5a5; font-size: 0.85rem; }
-
+    /* ── Misc ── */
+    .loader { text-align: center; padding: 28px; color: var(--muted); }
+    .empty  { text-align: center; padding: 28px; color: var(--muted); }
+    .error  { background: #450a0a; border: 1px solid #7f1d1d; border-radius: 8px; padding: 12px; color: #fca5a5; font-size: 0.83rem; }
     .page { display: none; }
     .page.active { display: block; }
+    .fx-info { font-size: 0.73rem; color: var(--muted); margin-bottom: 10px; }
 
-    .fx-info { font-size: 0.75rem; color: var(--muted); margin-bottom: 10px; }
-
-    .preview-btn { margin-top: 8px; background: none; border: 1px solid var(--border); color: var(--muted); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
-    .preview-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; align-items: flex-start; justify-content: center; padding: 16px; overflow-y: auto; }
+    /* ── Preview modal ── */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.78); z-index: 100; align-items: flex-start; justify-content: center; padding: 16px; overflow-y: auto; }
     .modal-overlay.open { display: flex; }
-    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; width: 100%; max-width: 680px; margin: auto; position: relative; }
-    .modal-close { position: absolute; top: 12px; right: 14px; background: none; border: none; color: var(--muted); font-size: 1.4rem; cursor: pointer; line-height: 1; }
-    .modal h3 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; padding-right: 24px; }
-    .preview-section { margin-bottom: 16px; }
-    .preview-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
-    .preview-value { font-size: 0.88rem; line-height: 1.55; }
-    .preview-desc { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 0.82rem; line-height: 1.6; white-space: pre-wrap; font-family: monospace; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; width: 100%; max-width: 680px; margin: auto; position: relative; }
+    .modal-close { position: absolute; top: 11px; right: 13px; background: none; border: none; color: var(--muted); font-size: 1.4rem; cursor: pointer; line-height: 1; }
+    .modal h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 14px; padding-right: 24px; }
+    .preview-section { margin-bottom: 14px; }
+    .preview-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
+    .preview-value { font-size: 0.86rem; line-height: 1.5; }
+    .preview-desc { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 11px; font-size: 0.8rem; line-height: 1.6; white-space: pre-wrap; font-family: monospace; }
     .preview-pills { display: flex; flex-wrap: wrap; gap: 6px; }
-    .pill { background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; font-size: 0.75rem; }
+    .pill { background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; font-size: 0.73rem; }
     .pill.catalog { border-color: var(--accent2); color: var(--accent2); }
-    .pill.manual { border-color: var(--warn); color: var(--warn); }
-    .price-grid { display: flex; gap: 10px; flex-wrap: wrap; }
-    .price-item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; flex: 1; min-width: 90px; text-align: center; }
-    .price-item .pval { font-size: 1rem; font-weight: 700; }
-    .price-item .plbl { font-size: 0.68rem; color: var(--muted); }
+    .pill.manual  { border-color: var(--warn); color: var(--warn); }
+    .price-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+    .price-item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 7px 11px; flex: 1; min-width: 85px; text-align: center; }
+    .price-item .pval { font-size: 0.95rem; font-weight: 700; }
+    .price-item .plbl { font-size: 0.66rem; color: var(--muted); }
   </style>
 </head>
 <body>
@@ -118,9 +138,10 @@
 </header>
 
 <nav>
-  <button class="active" onclick="switchTab('run')">🔍 出品プラン</button>
-  <button onclick="switchTab('orders')">📦 受注</button>
-  <button onclick="switchTab('sync')">🔄 在庫同期</button>
+  <button class="active" onclick="switchTab('run', this)">🔍 出品プラン</button>
+  <button onclick="switchTab('orders', this)">📦 受注</button>
+  <button onclick="switchTab('sync', this)">🔄 在庫同期</button>
+  <span id="running-badge" class="running-badge" style="display:none">⏳ 実行中...</span>
 </nav>
 
 <main>
@@ -129,17 +150,24 @@
   <div id="page-run" class="page active">
     <div class="card">
       <h2>出品プランを生成</h2>
+
+      <span class="section-label">仕入れ元（複数可）</span>
+      <div class="check-row" id="source-checks">
+        <label class="check-pill"><input type="checkbox" class="src-cb" value="rakuten" checked> 楽天</label>
+        <label class="check-pill"><input type="checkbox" class="src-cb" value="yahoo" checked> ヤフオク</label>
+        <label class="check-pill"><input type="checkbox" class="src-cb" value="yahoo_shopping" checked> ヤフーショッピング</label>
+      </div>
+
+      <span class="section-label">カテゴリ（複数可・空=すべて）</span>
+      <div class="check-row">
+        <label class="check-pill"><input type="checkbox" class="cat-cb" value="sports" checked> 🏃 スポーツ用品</label>
+        <label class="check-pill"><input type="checkbox" class="cat-cb" value="watches" checked> ⌚ 時計</label>
+        <label class="check-pill"><input type="checkbox" class="cat-cb" value="electronics" checked> 💡 家電</label>
+      </div>
+
       <div class="form-row">
         <div class="form-group">
-          <label>仕入れ元</label>
-          <select id="source">
-            <option value="rakuten">楽天</option>
-            <option value="yahoo">ヤフオク</option>
-            <option value="yahoo_shopping">ヤフーショッピング</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>発送先</label>
+          <label class="field-label">発送先</label>
           <select id="dest">
             <option value="US">🇺🇸 US</option>
             <option value="GB">🇬🇧 UK</option>
@@ -148,7 +176,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label>件数上限</label>
+          <label class="field-label">件数上限（ソースごと）</label>
           <select id="limit">
             <option value="10">10件</option>
             <option value="20" selected>20件</option>
@@ -158,11 +186,20 @@
       </div>
       <div class="form-row">
         <div class="form-group" style="flex:2">
-          <label>キーワード（任意）</label>
-          <input id="keyword" type="text" placeholder="例: casio watch" />
+          <label class="field-label">キーワード（任意）</label>
+          <input id="keyword" type="text" placeholder="例: mizuno, casio, panasonic" />
         </div>
       </div>
-      <button class="btn" id="run-btn" onclick="runPipeline()">▶ 出品プランを生成</button>
+      <button class="btn" id="run-btn" onclick="runPipeline()">▶ スクレイピング開始</button>
+    </div>
+
+    <!-- progress (hidden until running) -->
+    <div id="progress-area" style="display:none">
+      <div class="progress-card">
+        <div class="progress-steps" id="progress-steps"></div>
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="progress-text" id="progress-text">準備中...</div>
+      </div>
     </div>
 
     <div id="run-result"></div>
@@ -172,7 +209,7 @@
   <div id="page-orders" class="page">
     <div class="card">
       <h2>eBay 受注一覧</h2>
-      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:12px;">売れた商品の仕入れ承認フロー。「購入する」をタップして仕入れページを開き、手動で注文してください。</p>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:12px;">売れた商品の仕入れ承認フロー。「購入する」をタップして仕入れページを開き、手動で注文してください。</p>
       <button class="btn green" onclick="loadOrders()">🔄 受注を取得</button>
     </div>
     <div id="orders-result"></div>
@@ -182,7 +219,7 @@
   <div id="page-sync" class="page">
     <div class="card">
       <h2>在庫 / 価格同期</h2>
-      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:12px;">出品中の商品が仕入れ元で売切れ・値上がりしていないか確認します。</p>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:12px;">出品中の商品が仕入れ元で売切れ・値上がりしていないか確認します。</p>
       <button class="btn" onclick="runSync()">🔄 同期チェック</button>
     </div>
     <div id="sync-result"></div>
@@ -195,22 +232,18 @@
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">×</button>
     <h3 id="modal-title">出品プレビュー</h3>
-
     <div class="preview-section">
       <div class="preview-label">eBay タイトル（英語）</div>
       <div class="preview-value" id="modal-ebay-title"></div>
     </div>
-
     <div class="preview-section">
       <div class="preview-label">写真モード</div>
       <div id="modal-photo"></div>
     </div>
-
     <div class="preview-section">
       <div class="preview-label">価格内訳</div>
       <div class="price-grid" id="modal-price"></div>
     </div>
-
     <div class="preview-section">
       <div class="preview-label">出品文（生成テキスト）</div>
       <div class="preview-desc" id="modal-desc"></div>
@@ -219,8 +252,171 @@
 </div>
 
 <script>
+// ─── Source label map ────────────────────────────────────────────────────────
+const SRC_LABEL = { rakuten: '楽天', yahoo: 'ヤフオク', yahoo_shopping: 'ヤフーショッピング' };
+const SRC_ICON  = { rakuten: '🏬', yahoo: '🔨', yahoo_shopping: '🛍️' };
+
+// ─── Shared state ─────────────────────────────────────────────────────────────
 let _plans = [];
 
+// ─── Tab switching ─────────────────────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+// ─── Pipeline (SSE streaming) ──────────────────────────────────────────────────
+async function runPipeline() {
+  const sources = [...document.querySelectorAll('.src-cb:checked')].map(e => e.value);
+  const categories = [...document.querySelectorAll('.cat-cb:checked')].map(e => e.value);
+
+  if (!sources.length) {
+    alert('仕入れ元を1つ以上選択してください');
+    return;
+  }
+
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  btn.textContent = '実行中...';
+  document.getElementById('running-badge').style.display = 'inline';
+  document.getElementById('run-result').innerHTML = '';
+
+  // Build step indicators
+  const progressArea = document.getElementById('progress-area');
+  progressArea.style.display = 'block';
+  document.getElementById('progress-fill').style.width = '0%';
+  document.getElementById('progress-text').textContent = '準備中...';
+  document.getElementById('progress-steps').innerHTML = sources.map(s =>
+    `<div class="step" id="step-${s}">
+       <span class="step-icon">⏳</span>
+       <span>${SRC_ICON[s] || ''} ${SRC_LABEL[s] || s}</span>
+     </div>`
+  ).join('');
+
+  try {
+    const resp = await fetch('/api/run/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sources,
+        categories,
+        dest: document.getElementById('dest').value,
+        limit: parseInt(document.getElementById('limit').value),
+        keyword: document.getElementById('keyword').value || null,
+      }),
+    });
+
+    if (!resp.ok) {
+      throw new Error(`HTTP ${resp.status}`);
+    }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop(); // keep incomplete line
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            handleSSE(JSON.parse(line.slice(6)), sources);
+          } catch (_) {}
+        }
+      }
+    }
+  } catch (e) {
+    document.getElementById('run-result').innerHTML =
+      `<div class="error">エラー: ${e.message}</div>`;
+    progressArea.style.display = 'none';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '▶ スクレイピング開始';
+    document.getElementById('running-badge').style.display = 'none';
+  }
+}
+
+function handleSSE(evt, sources) {
+  const fillEl  = document.getElementById('progress-fill');
+  const textEl  = document.getElementById('progress-text');
+
+  if (evt.type === 'progress') {
+    const pct = Math.round(evt.step / sources.length * 100);
+    fillEl.style.width = pct + '%';
+    textEl.textContent = `${SRC_ICON[evt.source] || ''} ${SRC_LABEL[evt.source] || evt.source} をスクレイピング中...`;
+    const stepEl = document.getElementById('step-' + evt.source);
+    if (stepEl) stepEl.querySelector('.step-icon').textContent = '⏳';
+
+  } else if (evt.type === 'source_done') {
+    const idx = sources.indexOf(evt.source);
+    const pct = Math.round((idx + 1) / sources.length * 100);
+    fillEl.style.width = pct + '%';
+    textEl.textContent = `${SRC_LABEL[evt.source] || evt.source} 完了 — ${evt.count}件`;
+    const stepEl = document.getElementById('step-' + evt.source);
+    if (stepEl) stepEl.querySelector('.step-icon').textContent = '✅';
+
+  } else if (evt.type === 'source_error') {
+    textEl.textContent = `${SRC_LABEL[evt.source] || evt.source} エラー`;
+    const stepEl = document.getElementById('step-' + evt.source);
+    if (stepEl) stepEl.querySelector('.step-icon').textContent = '❌';
+
+  } else if (evt.type === 'done') {
+    fillEl.style.width = '100%';
+    const total = (evt.counts.auto_publish || 0) + (evt.counts.draft_pending_photo || 0) + (evt.counts.skip || 0);
+    textEl.textContent = `完了 — 合計 ${total}件処理`;
+    setTimeout(() => {
+      document.getElementById('progress-area').style.display = 'none';
+    }, 2500);
+    renderPlans(evt);
+  }
+}
+
+// ─── Render plan list ──────────────────────────────────────────────────────────
+function renderPlans(data) {
+  _plans = data.plans || [];
+  const c = data.counts || {};
+  const fxNote = data.fx_source === 'live'
+    ? `為替: $1 = ¥${(data.usd_jpy||0).toFixed(1)} (リアルタイム)`
+    : `為替: $1 = ¥${(data.usd_jpy||0).toFixed(1)} (設定値)`;
+
+  let html = `
+    <div class="fx-info">${fxNote}</div>
+    <div class="stats">
+      <div class="stat green"><div class="val">${c.auto_publish||0}</div><div class="lbl">✅ 自動出品</div></div>
+      <div class="stat yellow"><div class="val">${c.draft_pending_photo||0}</div><div class="lbl">📷 写真待ち下書き</div></div>
+      <div class="stat red"><div class="val">${c.skip||0}</div><div class="lbl">⛔ 除外</div></div>
+    </div>
+    <div class="plan-list">
+  `;
+
+  const label = { auto_publish:'✅ 自動出品', draft_pending_photo:'📷 写真待ち', skip:'⛔ 除外' };
+  for (let i = 0; i < _plans.length; i++) {
+    const p = _plans[i];
+    const warns = (p.warnings || []).map(w => `<div class="plan-warn">⚠ ${w}</div>`).join('');
+    const price = p.list_price_usd ? `$${p.list_price_usd} ${p.currency}` : '-';
+    const st = p.sell_through != null ? `回転率 ${(p.sell_through*100).toFixed(0)}%` : '';
+    const srcIcon = SRC_ICON[p.source] || '';
+    html += `
+      <div class="plan ${p.action}">
+        <div class="plan-header">
+          <div class="plan-title">${p.title || p.sku}</div>
+          <span class="badge ${p.action}">${label[p.action]||p.action}</span>
+        </div>
+        <div class="plan-meta">${srcIcon} ${p.sku} ・ ${price} ・ 写真: ${p.photo_mode} ・ ${st}</div>
+        ${warns}
+        <button class="preview-btn" onclick="openPreview(${i})">📋 出品内容を確認</button>
+      </div>`;
+  }
+  html += '</div>';
+  document.getElementById('run-result').innerHTML = html;
+}
+
+// ─── Preview modal ─────────────────────────────────────────────────────────────
 function openPreview(idx) {
   const p = _plans[idx];
   document.getElementById('modal-title').textContent = p.title || p.sku;
@@ -231,15 +427,14 @@ function openPreview(idx) {
     : '<span class="pill manual">📸 出品者撮影が必要（手動）</span>';
   document.getElementById('modal-photo').innerHTML = `<div class="preview-pills">${photoLabel}</div>`;
 
-  const cost = p.cost_jpy ? `¥${p.cost_jpy.toLocaleString()}` : '-';
-  const sell = p.list_price_usd ? `$${p.list_price_usd}` : '-';
+  const cost   = p.cost_jpy ? `¥${p.cost_jpy.toLocaleString()}` : '-';
+  const sell   = p.list_price_usd ? `$${p.list_price_usd}` : '-';
   const profit = p.profit_jpy != null ? `¥${Math.round(p.profit_jpy).toLocaleString()}` : '-';
   document.getElementById('modal-price').innerHTML = `
     <div class="price-item"><div class="pval">${cost}</div><div class="plbl">仕入れ原価</div></div>
     <div class="price-item"><div class="pval">${sell}</div><div class="plbl">出品価格 (USD)</div></div>
     <div class="price-item"><div class="pval" style="color:var(--accent2)">${profit}</div><div class="plbl">想定利益</div></div>
   `;
-
   document.getElementById('modal-desc').textContent = p.description || '(説明文未生成)';
   document.getElementById('preview-modal').classList.add('open');
 }
@@ -248,81 +443,11 @@ function closeModal() {
   document.getElementById('preview-modal').classList.remove('open');
 }
 
-function switchTab(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  event.target.classList.add('active');
-}
-
-async function runPipeline() {
-  const btn = document.getElementById('run-btn');
-  btn.disabled = true; btn.textContent = '生成中...';
-  document.getElementById('run-result').innerHTML = '<div class="loader">⏳ 処理中...</div>';
-  try {
-    const res = await fetch('/api/run', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        user: 'web-user',
-        source: document.getElementById('source').value,
-        dest: document.getElementById('dest').value,
-        limit: parseInt(document.getElementById('limit').value),
-        keyword: document.getElementById('keyword').value || null,
-      })
-    });
-    const data = await res.json();
-    if (!data.ok) { const e = new Error(data.error); e._trace = data.trace||''; throw e; }
-    renderPlans(data);
-  } catch(e) {
-    document.getElementById('run-result').innerHTML = `<div class="error" style="white-space:pre-wrap;font-size:0.75rem">エラー: ${e.message}\n\n${e._trace||''}</div>`;
-  } finally {
-    btn.disabled = false; btn.textContent = '▶ 出品プランを生成';
-  }
-}
-
-function renderPlans(data) {
-  const c = data.counts;
-  const fxNote = data.fx_source === 'live'
-    ? `為替: $1 = ¥${data.usd_jpy.toFixed(1)} (リアルタイム)`
-    : `為替: $1 = ¥${data.usd_jpy.toFixed(1)} (設定値)`;
-
-  let html = `
-    <div class="fx-info">${fxNote}</div>
-    <div class="stats">
-      <div class="stat green"><div class="val">${c.auto_publish}</div><div class="lbl">✅ 自動出品</div></div>
-      <div class="stat yellow"><div class="val">${c.draft_pending_photo}</div><div class="lbl">📷 写真待ち下書き</div></div>
-      <div class="stat red"><div class="val">${c.skip}</div><div class="lbl">⛔ 除外</div></div>
-    </div>
-    <div class="plan-list">
-  `;
-
-  _plans = data.plans;
-  const label = {auto_publish:'✅ 自動出品', draft_pending_photo:'📷 写真待ち', skip:'⛔ 除外'};
-  for (let i = 0; i < data.plans.length; i++) {
-    const p = data.plans[i];
-    const warns = p.warnings.map(w => `<div class="plan-warn">⚠ ${w}</div>`).join('');
-    const price = p.list_price_usd ? `$${p.list_price_usd} ${p.currency}` : '-';
-    const st = p.sell_through != null ? `回転率 ${(p.sell_through*100).toFixed(0)}%` : '';
-    html += `
-      <div class="plan ${p.action}">
-        <div class="plan-header">
-          <div class="plan-title">${p.title || p.sku}</div>
-          <span class="badge ${p.action}">${label[p.action]||p.action}</span>
-        </div>
-        <div class="plan-meta">${p.sku} ・ 出品価格 ${price} ・ 写真: ${p.photo_mode} ・ ${st}</div>
-        ${warns}
-        <button class="preview-btn" onclick="openPreview(${i})">📋 出品内容を確認</button>
-      </div>`;
-  }
-  html += '</div>';
-  document.getElementById('run-result').innerHTML = html;
-}
-
+// ─── Orders ───────────────────────────────────────────────────────────────────
 async function loadOrders() {
   document.getElementById('orders-result').innerHTML = '<div class="loader">⏳ 取得中...</div>';
   try {
-    const res = await fetch('/api/orders?user=web-user');
+    const res = await fetch('/api/orders');
     const data = await res.json();
     if (!data.ok) throw new Error(data.error);
     if (!data.orders.length) {
@@ -347,10 +472,11 @@ async function loadOrders() {
   }
 }
 
+// ─── Sync ─────────────────────────────────────────────────────────────────────
 async function runSync() {
   document.getElementById('sync-result').innerHTML = '<div class="loader">⏳ チェック中...</div>';
   try {
-    const res = await fetch('/api/sync?user=web-user');
+    const res = await fetch('/api/sync');
     const data = await res.json();
     if (!data.ok) throw new Error(data.error);
     let html = '<div class="card"><h2>同期結果</h2>';
@@ -361,7 +487,7 @@ async function runSync() {
           <span>${d.sku}</span>
           <div style="text-align:right">
             <span class="sync-action ${d.action}">${d.action}${np}</span>
-            <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">${d.reason}</div>
+            <div style="font-size:0.7rem;color:var(--muted);margin-top:2px">${d.reason}</div>
           </div>
         </div>`;
     }
