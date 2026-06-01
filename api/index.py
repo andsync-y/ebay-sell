@@ -15,6 +15,11 @@ from __future__ import annotations
 import json
 import os
 import sys
+
+# Vercel's sandbox has a read-only home directory. /tmp is the only writable
+# location in serverless functions. Set this before importing any src module
+# so default_home() picks it up at call time.
+os.environ.setdefault("YAFU2EBAY_HOME", "/tmp/yafu2ebay")
 from pathlib import Path
 
 # Make sure the repo root is on the path when running inside api/.
