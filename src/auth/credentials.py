@@ -260,6 +260,37 @@ class KeyringStore(CredentialStore):
 
 
 # --------------------------------------------------------------------------- #
+# In-memory backend (stateless / serverless environments)
+# --------------------------------------------------------------------------- #
+class MemoryStore(CredentialStore):
+    """Ephemeral in-memory store. No filesystem access whatsoever.
+
+    Use this in serverless / read-only environments (e.g. Vercel) where
+    persistent credential storage is not needed and env-var-based config
+    is used instead.
+    """
+
+    def __init__(self) -> None:
+        self._data: dict[str, Credential] = {}
+
+    def _key(self, user_id: str, service: str) -> str:
+        return f"{user_id}::{service}"
+
+    def get(self, user_id: str, service: str) -> Optional[Credential]:
+        return self._data.get(self._key(user_id, service))
+
+    def set(self, user_id: str, service: str, cred: Credential) -> None:
+        self._data[self._key(user_id, service)] = cred
+
+    def delete(self, user_id: str, service: str) -> None:
+        self._data.pop(self._key(user_id, service), None)
+
+    def list_services(self, user_id: str) -> list[str]:
+        prefix = f"{user_id}::"
+        return sorted(k[len(prefix):] for k in self._data if k.startswith(prefix))
+
+
+# --------------------------------------------------------------------------- #
 # Helpers / factory
 # --------------------------------------------------------------------------- #
 def _safe_user_id(user_id: str) -> str:

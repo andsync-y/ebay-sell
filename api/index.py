@@ -1,51 +1,52 @@
 """Vercel entry point — Flask web API wrapping the yafu2ebay pipeline.
 
-Credentials come from environment variables (Vercel dashboard) rather than
-encrypted files, since Vercel's filesystem is ephemeral.
+Uses MemoryStore so there are ZERO filesystem writes. Fully stateless —
+safe for Vercel serverless / read-only sandbox environments.
 
-Required env vars for live operation (all optional — app runs on sample data
-without them):
+Optional env vars (set in Vercel dashboard for live data):
   EBAY_CLIENT_ID / EBAY_CLIENT_SECRET / EBAY_RU_NAME
   ANTHROPIC_API_KEY
-  YAFU2EBAY_KEY   — Fernet key for any server-side credential encryption
+  YAFU2EBAY_WEBHOOK_URL   — Slack/LINE webhook for order notifications
 """
 
 from __future__ import annotations
 
-import json
 import os
 import sys
-
-# Vercel's sandbox has a read-only home directory. /tmp is the only writable
-# location in serverless functions. Set this before importing any src module
-# so default_home() picks it up at call time.
-os.environ.setdefault("YAFU2EBAY_HOME", "/tmp/yafu2ebay")
 from pathlib import Path
 
-# Make sure the repo root is on the path when running inside api/.
+# Repo root on path before any src imports.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from flask import Flask, jsonify, request
 
+from src.auth.credentials import MemoryStore
 from src.config import Config
+from src.comps import CompsProvider
+from src.compliance import ComplianceChecker
+from src.ebay import EbayClient
+from src.fx import FxProvider
+from src.generation import ListingGenerator
+from src.models import UserProfile
 from src.orders import OrderManager
 from src.pipeline import Pipeline
-from src.sources import available_sources
+from src.sources import available_sources, get_source
 from src.sync import ActiveListing, InventorySync
 
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 
+# Shared stateless objects (no file I/O).
+_store = MemoryStore()
+_config = Config.load()
 
-@app.route("/")
-def index():
-    return app.send_static_file("index.html")
 
-# --------------------------------------------------------------------------- #
-# Helpers
-# --------------------------------------------------------------------------- #
-
-def _get_config() -> Config:
-    return Config.load()
+def _make_pipeline(user_id: str = "web-user") -> Pipeline:
+    return Pipeline(
+        user_id=user_id,
+        config=_config,
+        store=_store,          # ← MemoryStore: no filesystem writes
+        allow_live_fx=True,
+    )
 
 
 def _plan_to_dict(plan) -> dict:
@@ -73,6 +74,11 @@ def _plan_to_dict(plan) -> dict:
 # Routes
 # --------------------------------------------------------------------------- #
 
+@app.route("/")
+def index():
+    return app.send_static_file("index.html")
+
+
 @app.route("/api/sources")
 def sources():
     return jsonify({"sources": available_sources()})
@@ -81,17 +87,17 @@ def sources():
 @app.route("/api/run", methods=["POST"])
 def run():
     data = request.get_json(silent=True) or {}
-    user_id = data.get("user", "web-user")
     source = data.get("source", "rakuten")
-    dest = data.get("dest", "US")
+    dest   = data.get("dest", "US")
     keyword = data.get("keyword") or None
-    limit = int(data.get("limit", 20))
+    limit  = int(data.get("limit", 20))
 
     try:
-        pipeline = Pipeline(user_id=user_id, allow_live_fx=True)
-        plans = pipeline.run(source_name=source, dest_country=dest,
-                             keyword=keyword, limit=limit, publish=False)
-        result = [_plan_to_dict(p) for p in plans]
+        pipeline = _make_pipeline()
+        plans = pipeline.run(
+            source_name=source, dest_country=dest,
+            keyword=keyword, limit=limit, publish=False,
+        )
         counts = {"auto_publish": 0, "draft_pending_photo": 0, "skip": 0}
         for p in plans:
             counts[p.action] = counts.get(p.action, 0) + 1
@@ -100,7 +106,7 @@ def run():
             "usd_jpy": pipeline.usd_jpy,
             "fx_source": pipeline.fx_source,
             "counts": counts,
-            "plans": result,
+            "plans": [_plan_to_dict(p) for p in plans],
         })
     except Exception as exc:
         return jsonify({"ok": False, "error": str(exc)}), 500
@@ -108,9 +114,8 @@ def run():
 
 @app.route("/api/orders")
 def orders():
-    user_id = request.args.get("user", "web-user")
     try:
-        mgr = OrderManager(user_id=user_id)
+        mgr = OrderManager(user_id="web-user", config=_config, store=_store)
         order_list = mgr.fetch_new_orders()
         return jsonify({
             "ok": True,
@@ -134,16 +139,15 @@ def orders():
 
 @app.route("/api/sync")
 def sync():
-    user_id = request.args.get("user", "web-user")
     dest = request.args.get("dest", "US")
-    # Demo listings (same as CLI demo).
     listings = [
         ActiveListing(sku="rakuten:rk-1001", listed_price_usd=119.0, dest_country=dest),
         ActiveListing(sku="rakuten:rk-9999", listed_price_usd=50.0,  dest_country=dest),
         ActiveListing(sku="yahoo:yf-2002",   listed_price_usd=94.0,  dest_country=dest),
     ]
     try:
-        inv = InventorySync(user_id=user_id, allow_live_fx=True)
+        inv = InventorySync(user_id="web-user", config=_config,
+                            store=_store, allow_live_fx=True)
         decisions = inv.run(listings, apply=False)
         return jsonify({
             "ok": True,
@@ -157,7 +161,5 @@ def sync():
         return jsonify({"ok": False, "error": str(exc)}), 500
 
 
-# Vercel calls `app` as the WSGI handler.
-# Local dev: python api/index.py
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
