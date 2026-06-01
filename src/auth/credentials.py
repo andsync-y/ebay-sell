@@ -36,8 +36,21 @@ from cryptography.fernet import Fernet, InvalidToken
 from ..models import Credential
 
 def default_home() -> Path:
-    """Resolve the storage root at call time (so tests/env overrides apply)."""
-    return Path(os.environ.get("YAFU2EBAY_HOME", Path.home() / ".yafu2ebay"))
+    """Resolve the storage root at call time (so tests/env overrides apply).
+
+    Falls back to /tmp/yafu2ebay when the home directory is not writable
+    (e.g. Vercel / read-only serverless environments).
+    """
+    env = os.environ.get("YAFU2EBAY_HOME")
+    if env:
+        return Path(env)
+    candidate = Path.home() / ".yafu2ebay"
+    # Quick write-access check: if home is read-only, use /tmp instead.
+    try:
+        candidate.mkdir(parents=True, exist_ok=True)
+        return candidate
+    except OSError:
+        return Path("/tmp/yafu2ebay")
 
 
 # Backwards-compatible module constant (do NOT use as a default-arg value;

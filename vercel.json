@@ -10,5 +10,8 @@
       "src": "/(.*)",
       "dest": "api/index.py"
     }
-  ]
+  ],
+  "env": {
+    "YAFU2EBAY_HOME": "/tmp/yafu2ebay"
+  }
 }
