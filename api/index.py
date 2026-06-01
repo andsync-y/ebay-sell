@@ -75,6 +75,24 @@ def index():
     return app.send_static_file("index.html")
 
 
+@app.route("/api/debug")
+def debug():
+    """Diagnostic endpoint — shows runtime env so we can pinpoint FS issues."""
+    import platform
+    try:
+        home_path = str(Path.home())
+    except Exception as e:
+        home_path = f"ERROR: {e}"
+    return jsonify({
+        "YAFU2EBAY_HOME": os.environ.get("YAFU2EBAY_HOME", "NOT SET"),
+        "HOME": os.environ.get("HOME", "NOT SET"),
+        "Path.home()": home_path,
+        "cwd": os.getcwd(),
+        "python": sys.version,
+        "platform": platform.platform(),
+    })
+
+
 @app.route("/api/sources")
 def sources():
     return jsonify({"sources": available_sources()})

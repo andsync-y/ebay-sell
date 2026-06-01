@@ -193,10 +193,10 @@ async function runPipeline() {
       })
     });
     const data = await res.json();
-    if (!data.ok) throw new Error(data.error);
+    if (!data.ok) { const e = new Error(data.error); e._trace = data.trace||''; throw e; }
     renderPlans(data);
   } catch(e) {
-    document.getElementById('run-result').innerHTML = `<div class="error">エラー: ${e.message}</div>`;
+    document.getElementById('run-result').innerHTML = `<div class="error" style="white-space:pre-wrap;font-size:0.75rem">エラー: ${e.message}\n\n${e._trace||''}</div>`;
   } finally {
     btn.disabled = false; btn.textContent = '▶ 出品プランを生成';
   }
