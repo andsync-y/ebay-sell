@@ -1,0 +1,26 @@
+[
+  {
+    "order_id": "EB-ORD-5001",
+    "ebay_item_id": "v1|3300001|0",
+    "sku": "rakuten:rk-1001",
+    "title": "Casio G-SHOCK GA-2100-1A1 Watch - Brand New",
+    "sold_price_usd": 119.0,
+    "buyer_country": "US",
+    "source_url": "https://item.rakuten.co.jp/example/rk-1001/",
+    "source_price_jpy": 9800,
+    "status": "awaiting_purchase",
+    "created_at": "2026-05-30T08:15:00Z"
+  },
+  {
+    "order_id": "EB-ORD-5002",
+    "ebay_item_id": "v1|3300002|0",
+    "sku": "rakuten:rk-1003",
+    "title": "Sony WH-1000XM4 Wireless Headphones - Brand New",
+    "sold_price_usd": 278.0,
+    "buyer_country": "GB",
+    "source_url": "https://item.rakuten.co.jp/example/rk-1003/",
+    "source_price_jpy": 32000,
+    "status": "awaiting_purchase",
+    "created_at": "2026-05-31T01:42:00Z"
+  }
+]

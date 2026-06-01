@@ -1,0 +1,50 @@
+[
+  {
+    "source": "yahoo",
+    "source_id": "yf-2001",
+    "url": "https://auctions.yahoo.co.jp/jp/auction/yf-2001",
+    "title": "Nintendo Switch 本体 中古 動作確認済み",
+    "price_jpy": 18000,
+    "condition": "used",
+    "brand": "Nintendo",
+    "category": "electronics",
+    "upc": null,
+    "ean": null,
+    "mpn": "HAC-001",
+    "weight_g": 900,
+    "dims_cm": [25, 18, 8],
+    "market_price_usd": 210.0
+  },
+  {
+    "source": "yahoo",
+    "source_id": "yf-2002",
+    "url": "https://auctions.yahoo.co.jp/jp/auction/yf-2002",
+    "title": "セイコー SEIKO 5 自動巻 腕時計 新品 SNK809",
+    "price_jpy": 8500,
+    "condition": "new",
+    "brand": "Seiko",
+    "category": "watches",
+    "upc": "029665156903",
+    "ean": null,
+    "mpn": "SNK809",
+    "weight_g": 130,
+    "dims_cm": [12, 10, 6],
+    "market_price_usd": 110.0
+  },
+  {
+    "source": "yahoo",
+    "source_id": "yf-2003",
+    "url": "https://auctions.yahoo.co.jp/jp/auction/yf-2003",
+    "title": "レトロ ブリキ おもちゃ 当時物 ジャンク",
+    "price_jpy": 3000,
+    "condition": "used",
+    "brand": null,
+    "category": "collectibles",
+    "upc": null,
+    "ean": null,
+    "mpn": null,
+    "weight_g": 500,
+    "dims_cm": [25, 15, 12],
+    "market_price_usd": 70.0
+  }
+]

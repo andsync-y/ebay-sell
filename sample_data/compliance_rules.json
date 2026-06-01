@@ -1,0 +1,18 @@
+{
+  "_comment": "Seed compliance data. TODO: replace/expand from eBay prohibited-items policy, export-control lists, and the official VeRO participant directory.",
+  "prohibited_keywords": [
+    "ナイフ", "knife", "銃", "gun", "firearm", "弾", "ammo",
+    "麻薬", "drug", "大麻", "cannabis", "象牙", "ivory",
+    "医薬品", "prescription", "alcohol", "酒", "tobacco", "タバコ",
+    "毒物", "poison", "sc1000", "現金", "gift card"
+  ],
+  "prohibited_categories": [],
+  "vero_brands": [
+    "chanel", "louis vuitton", "hermes", "gucci", "rolex",
+    "nike", "supreme", "disney", "nintendo", "sony",
+    "the north face", "patagonia", "burberry", "prada"
+  ],
+  "restricted_brands": [
+    "supreme"
+  ]
+}

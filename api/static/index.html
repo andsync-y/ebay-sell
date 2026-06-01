@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>yafu2ebay</title>
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --border: #2e2e2e;
+      --accent: #3b82f6;
+      --accent2: #10b981;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --text: #e5e5e5;
+      --muted: #737373;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
+    header h1 { font-size: 1.2rem; font-weight: 700; }
+    header span { color: var(--muted); font-size: 0.85rem; }
+
+    nav { display: flex; gap: 4px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface); overflow-x: auto; }
+    nav button { background: none; border: 1px solid var(--border); color: var(--muted); padding: 8px 16px; border-radius: 8px; cursor: pointer; white-space: nowrap; font-size: 0.9rem; transition: all .15s; }
+    nav button.active, nav button:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    main { padding: 16px; max-width: 900px; margin: 0 auto; }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 12px; }
+
+    .form-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 120px; }
+    label { font-size: 0.75rem; color: var(--muted); }
+    input, select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 8px 10px; border-radius: 8px; font-size: 0.9rem; }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+
+    .btn { background: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600; width: 100%; transition: opacity .15s; }
+    .btn:hover { opacity: 0.85; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn.green { background: var(--accent2); }
+
+    .stats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .stat { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; text-align: center; flex: 1; min-width: 80px; }
+    .stat .val { font-size: 1.4rem; font-weight: 700; }
+    .stat .lbl { font-size: 0.7rem; color: var(--muted); }
+    .stat.green .val { color: var(--accent2); }
+    .stat.yellow .val { color: var(--warn); }
+    .stat.red .val { color: var(--danger); }
+
+    .plan-list { display: flex; flex-direction: column; gap: 8px; }
+    .plan { border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+    .plan.auto_publish { border-left: 3px solid var(--accent2); }
+    .plan.draft_pending_photo { border-left: 3px solid var(--warn); }
+    .plan.skip { border-left: 3px solid var(--danger); opacity: 0.7; }
+    .plan-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .plan-title { font-size: 0.9rem; font-weight: 600; flex: 1; }
+    .badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+    .badge.auto_publish { background: #065f46; color: #6ee7b7; }
+    .badge.draft_pending_photo { background: #78350f; color: #fde68a; }
+    .badge.skip { background: #450a0a; color: #fca5a5; }
+    .plan-meta { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+    .plan-warn { font-size: 0.75rem; color: var(--warn); margin-top: 4px; }
+
+    .order-card { border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 8px; }
+    .order-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; }
+    .order-meta { font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; }
+    .order-link { display: inline-block; background: var(--accent2); color: #fff; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; text-decoration: none; font-weight: 600; }
+
+    .sync-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+    .sync-row:last-child { border-bottom: none; }
+    .sync-action { font-size: 0.75rem; padding: 2px 8px; border-radius: 20px; }
+    .sync-action.keep { background: #065f46; color: #6ee7b7; }
+    .sync-action.end  { background: #450a0a; color: #fca5a5; }
+    .sync-action.reprice { background: #1e3a5f; color: #93c5fd; }
+
+    .loader { text-align: center; padding: 32px; color: var(--muted); }
+    .empty { text-align: center; padding: 32px; color: var(--muted); }
+    .error { background: #450a0a; border: 1px solid #7f1d1d; border-radius: 8px; padding: 12px; color: #fca5a5; font-size: 0.85rem; }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .fx-info { font-size: 0.75rem; color: var(--muted); margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🛒 yafu2ebay</h1>
+    <span>EC→eBay 自動出品パイプライン</span>
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="switchTab('run')">🔍 出品プラン</button>
+  <button onclick="switchTab('orders')">📦 受注</button>
+  <button onclick="switchTab('sync')">🔄 在庫同期</button>
+</nav>
+
+<main>
+
+  <!-- ===== RUN ===== -->
+  <div id="page-run" class="page active">
+    <div class="card">
+      <h2>出品プランを生成</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>仕入れ元</label>
+          <select id="source">
+            <option value="rakuten">楽天</option>
+            <option value="yahoo">ヤフオク</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>発送先</label>
+          <select id="dest">
+            <option value="US">🇺🇸 US</option>
+            <option value="GB">🇬🇧 UK</option>
+            <option value="DE">🇩🇪 DE</option>
+            <option value="AU">🇦🇺 AU</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>件数上限</label>
+          <select id="limit">
+            <option value="10">10件</option>
+            <option value="20" selected>20件</option>
+            <option value="50">50件</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:2">
+          <label>キーワード（任意）</label>
+          <input id="keyword" type="text" placeholder="例: casio watch" />
+        </div>
+      </div>
+      <button class="btn" id="run-btn" onclick="runPipeline()">▶ 出品プランを生成</button>
+    </div>
+
+    <div id="run-result"></div>
+  </div>
+
+  <!-- ===== ORDERS ===== -->
+  <div id="page-orders" class="page">
+    <div class="card">
+      <h2>eBay 受注一覧</h2>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:12px;">売れた商品の仕入れ承認フロー。「購入する」をタップして仕入れページを開き、手動で注文してください。</p>
+      <button class="btn green" onclick="loadOrders()">🔄 受注を取得</button>
+    </div>
+    <div id="orders-result"></div>
+  </div>
+
+  <!-- ===== SYNC ===== -->
+  <div id="page-sync" class="page">
+    <div class="card">
+      <h2>在庫 / 価格同期</h2>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:12px;">出品中の商品が仕入れ元で売切れ・値上がりしていないか確認します。</p>
+      <button class="btn" onclick="runSync()">🔄 同期チェック</button>
+    </div>
+    <div id="sync-result"></div>
+  </div>
+
+</main>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+async function runPipeline() {
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true; btn.textContent = '生成中...';
+  document.getElementById('run-result').innerHTML = '<div class="loader">⏳ 処理中...</div>';
+  try {
+    const res = await fetch('/api/run', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        user: 'web-user',
+        source: document.getElementById('source').value,
+        dest: document.getElementById('dest').value,
+        limit: parseInt(document.getElementById('limit').value),
+        keyword: document.getElementById('keyword').value || null,
+      })
+    });
+    const data = await res.json();
+    if (!data.ok) { const e = new Error(data.error); e._trace = data.trace||''; throw e; }
+    renderPlans(data);
+  } catch(e) {
+    document.getElementById('run-result').innerHTML = `<div class="error" style="white-space:pre-wrap;font-size:0.75rem">エラー: ${e.message}\n\n${e._trace||''}</div>`;
+  } finally {
+    btn.disabled = false; btn.textContent = '▶ 出品プランを生成';
+  }
+}
+
+function renderPlans(data) {
+  const c = data.counts;
+  const fxNote = data.fx_source === 'live'
+    ? `為替: $1 = ¥${data.usd_jpy.toFixed(1)} (リアルタイム)`
+    : `為替: $1 = ¥${data.usd_jpy.toFixed(1)} (設定値)`;
+
+  let html = `
+    <div class="fx-info">${fxNote}</div>
+    <div class="stats">
+      <div class="stat green"><div class="val">${c.auto_publish}</div><div class="lbl">✅ 自動出品</div></div>
+      <div class="stat yellow"><div class="val">${c.draft_pending_photo}</div><div class="lbl">📷 写真待ち下書き</div></div>
+      <div class="stat red"><div class="val">${c.skip}</div><div class="lbl">⛔ 除外</div></div>
+    </div>
+    <div class="plan-list">
+  `;
+
+  const label = {auto_publish:'✅ 自動出品', draft_pending_photo:'📷 写真待ち', skip:'⛔ 除外'};
+  for (const p of data.plans) {
+    const warns = p.warnings.map(w => `<div class="plan-warn">⚠ ${w}</div>`).join('');
+    const price = p.list_price_usd ? `$${p.list_price_usd} ${p.currency}` : '-';
+    const st = p.sell_through != null ? `回転率 ${(p.sell_through*100).toFixed(0)}%` : '';
+    html += `
+      <div class="plan ${p.action}">
+        <div class="plan-header">
+          <div class="plan-title">${p.title || p.sku}</div>
+          <span class="badge ${p.action}">${label[p.action]||p.action}</span>
+        </div>
+        <div class="plan-meta">${p.sku} ・ 出品価格 ${price} ・ 写真: ${p.photo_mode} ・ ${st}</div>
+        ${warns}
+      </div>`;
+  }
+  html += '</div>';
+  document.getElementById('run-result').innerHTML = html;
+}
+
+async function loadOrders() {
+  document.getElementById('orders-result').innerHTML = '<div class="loader">⏳ 取得中...</div>';
+  try {
+    const res = await fetch('/api/orders?user=web-user');
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    if (!data.orders.length) {
+      document.getElementById('orders-result').innerHTML = '<div class="empty">受注なし</div>';
+      return;
+    }
+    let html = '';
+    for (const o of data.orders) {
+      html += `
+        <div class="order-card">
+          <div class="order-title">🟢 ${o.title}</div>
+          <div class="order-meta">
+            注文 #${o.order_id} ・ 売値 $${o.sold_price_usd} → ${o.buyer_country}<br>
+            仕入れ価格: ¥${o.source_price_jpy.toLocaleString()} (上限 ¥${o.max_price_jpy.toLocaleString()})
+          </div>
+          <a class="order-link" href="${o.source_url}" target="_blank">🛒 購入する →</a>
+        </div>`;
+    }
+    document.getElementById('orders-result').innerHTML = html;
+  } catch(e) {
+    document.getElementById('orders-result').innerHTML = `<div class="error">エラー: ${e.message}</div>`;
+  }
+}
+
+async function runSync() {
+  document.getElementById('sync-result').innerHTML = '<div class="loader">⏳ チェック中...</div>';
+  try {
+    const res = await fetch('/api/sync?user=web-user');
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    let html = '<div class="card"><h2>同期結果</h2>';
+    for (const d of data.decisions) {
+      const np = d.new_price_usd ? ` → $${d.new_price_usd}` : '';
+      html += `
+        <div class="sync-row">
+          <span>${d.sku}</span>
+          <div style="text-align:right">
+            <span class="sync-action ${d.action}">${d.action}${np}</span>
+            <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">${d.reason}</div>
+          </div>
+        </div>`;
+    }
+    html += '</div>';
+    document.getElementById('sync-result').innerHTML = html;
+  } catch(e) {
+    document.getElementById('sync-result').innerHTML = `<div class="error">エラー: ${e.message}</div>`;
+  }
+}
+</script>
+</body>
+</html>

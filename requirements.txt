@@ -1,0 +1,17 @@
+# Core (always required)
+pyyaml>=6.0
+requests>=2.31
+flask>=3.0
+
+# Credential encryption (CredentialStore: Fernet-based encrypted file store)
+cryptography>=41.0
+
+# Optional: original listing-text generation via Claude.
+# The app falls back to template generation when this is absent.
+anthropic>=0.34 ; extra == "ai"
+
+# Optional: OS keychain credential store backend.
+keyring>=24.0 ; extra == "keyring"
+
+# Dev / tests
+pytest>=7.4 ; extra == "dev"

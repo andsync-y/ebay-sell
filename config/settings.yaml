@@ -1,0 +1,176 @@
+# yafu2ebay settings
+# ---------------------------------------------------------------------------
+# NOTE: This file holds NON-secret operational parameters only.
+# Never put API keys / OAuth tokens / passwords here. Credentials are stored
+# encrypted per-user via src/auth/credentials.py (see §2.12).
+# ---------------------------------------------------------------------------
+
+# Foreign exchange. fx.py can refresh usd_jpy at runtime; this is the fallback.
+fx:
+  usd_jpy: 155.0          # TODO: replace with live rate source (see fx.py)
+  buffer_pct: 0.02        # safety buffer applied to live rate (yen-strengthening guard)
+
+pricing:
+  target_margin: 0.08     # "break-even + 8%". cost-basis by default.
+  margin_basis: cost      # "cost" -> profit = cost * margin ; "price" -> price-basis
+  payment_fx_rate: 0.04   # Payoneer payout + fx spread, as a fraction of sale. TODO: real value
+  default_category_fee: 0.22  # eBay final value fee when category unknown
+
+# eBay final value fee rate per (normalised) category.
+# TODO: confirm against current eBay fee schedule.
+category_fee:
+  electronics: 0.2235
+  toys: 0.1335
+  fashion: 0.15
+  watches: 0.15
+  collectibles: 0.1335
+  home: 0.1335
+  default: 0.22
+
+shipping:
+  volumetric_divisor: 5000   # cm^3 per kg. TODO: confirm per carrier contract.
+  # Each carrier: weight_basis (actual|volumetric_max), limits, and zone tables.
+  # Zone tables: list of [max_weight_g, cost_jpy] bands (first band that fits wins).
+  # TODO: replace all figures with real contracted rates.
+  carriers:
+    ems:
+      weight_basis: actual
+      max_weight_g: 30000
+      max_longest_cm: 150
+      zones:
+        zone1:  # e.g. Asia
+          - [500, 1450]
+          - [1000, 1900]
+          - [2000, 3150]
+          - [5000, 6400]
+          - [10000, 11500]
+          - [30000, 28000]
+        zone2:  # e.g. North America / Oceania / Middle East
+          - [500, 2150]
+          - [1000, 2800]
+          - [2000, 4180]
+          - [5000, 8700]
+          - [10000, 15000]
+          - [30000, 37000]
+        zone3:  # e.g. Europe
+          - [500, 2400]
+          - [1000, 3150]
+          - [2000, 4600]
+          - [5000, 9700]
+          - [10000, 17000]
+          - [30000, 42000]
+    fedex:
+      weight_basis: volumetric_max
+      max_weight_g: 68000
+      max_longest_cm: 274
+      zones:
+        zone1:
+          - [500, 1900]
+          - [1000, 2300]
+          - [2000, 3300]
+          - [5000, 6000]
+          - [10000, 10500]
+        zone2:
+          - [500, 2600]
+          - [1000, 3100]
+          - [2000, 4500]
+          - [5000, 8200]
+          - [10000, 14500]
+        zone3:
+          - [500, 2900]
+          - [1000, 3500]
+          - [2000, 5000]
+          - [5000, 9200]
+          - [10000, 16500]
+    dhl:
+      weight_basis: volumetric_max
+      max_weight_g: 70000
+      max_longest_cm: 300
+      zones:
+        zone1:
+          - [500, 1850]
+          - [1000, 2250]
+          - [2000, 3200]
+          - [5000, 5900]
+          - [10000, 10200]
+        zone2:
+          - [500, 2550]
+          - [1000, 3050]
+          - [2000, 4400]
+          - [5000, 8000]
+          - [10000, 14200]
+        zone3:
+          - [500, 2850]
+          - [1000, 3450]
+          - [2000, 4900]
+          - [5000, 9000]
+          - [10000, 16200]
+  # Destination country (ISO-3166 alpha-2) -> zone bucket.
+  country_to_zone:
+    JP: zone1
+    KR: zone1
+    CN: zone1
+    TW: zone1
+    HK: zone1
+    SG: zone1
+    US: zone2
+    CA: zone2
+    AU: zone2
+    NZ: zone2
+    AE: zone2
+    GB: zone3
+    DE: zone3
+    FR: zone3
+    IT: zone3
+    ES: zone3
+  default_zone: zone2
+
+ebay:
+  # Brands with a documented history of demanding takedowns even on catalog
+  # images. These are always routed to manual photo / draft. See compliance.py
+  # for the broader VeRO list.
+  brand_image_exclusions:
+    - chanel
+    - louis vuitton
+    - hermes
+    - gucci
+    - rolex
+    - nike
+    - supreme
+  # Default marketplace + currency for listing (multi-site capable). See §2.13-D.
+  default_marketplace: EBAY_US
+  marketplace_currency:
+    EBAY_US: USD
+    EBAY_GB: GBP
+    EBAY_DE: EUR
+    EBAY_AU: AUD
+
+# Category-keyed default weight/dimensions used when the source lacks them.
+size_defaults:
+  electronics: { weight_g: 800,  dims_cm: [25, 20, 10] }
+  toys:        { weight_g: 600,  dims_cm: [30, 25, 15] }
+  fashion:     { weight_g: 500,  dims_cm: [35, 28, 8] }
+  watches:     { weight_g: 400,  dims_cm: [15, 12, 8] }
+  collectibles: { weight_g: 700, dims_cm: [30, 25, 15] }
+  home:        { weight_g: 1500, dims_cm: [40, 30, 25] }
+  default:     { weight_g: 1000, dims_cm: [30, 25, 15] }
+
+filter:
+  min_sell_through: 0.35   # 0..1; below this score -> skip
+  min_profit_jpy: 300      # absolute floor; below this -> skip
+
+generation:
+  use_api: false           # true -> use Anthropic Messages API (needs key)
+  anthropic_model: claude-sonnet-4-6
+  max_title_chars: 80      # eBay title hard limit
+
+# Repricer guardrails (see repricer.py). Never breaches the min profit line.
+repricer:
+  step_usd: 0.50           # undercut competitor by this much
+  min_floor_uses_pricing: true  # floor = list price implied by min margin
+
+# Account health thresholds (see compliance.py). Above -> auto-pause listings.
+account_health:
+  max_defect_rate: 0.02
+  max_late_shipment_rate: 0.05
+  max_open_vero_cases: 0

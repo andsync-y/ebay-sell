@@ -1,0 +1,13 @@
+{
+  "_comment": "Offline stand-in for eBay Marketplace Insights / Terapeak sold data. Keyed by source_id; pipeline also falls back to SourceItem.market_price_usd.",
+  "rk-1001": { "est_sell_price_usd": 119.0, "sell_through_score": 0.82, "median_days_to_sell": 9 },
+  "rk-1002": { "est_sell_price_usd": 24.0,  "sell_through_score": 0.71, "median_days_to_sell": 14 },
+  "rk-1003": { "est_sell_price_usd": 278.0, "sell_through_score": 0.68, "median_days_to_sell": 12 },
+  "rk-1004": { "est_sell_price_usd": 38.0,  "sell_through_score": 0.40, "median_days_to_sell": 30 },
+  "rk-1005": { "est_sell_price_usd": 240.0, "sell_through_score": 0.55, "median_days_to_sell": 20 },
+  "rk-1006": { "est_sell_price_usd": 60.0,  "sell_through_score": 0.50, "median_days_to_sell": 25 },
+  "rk-1007": { "est_sell_price_usd": 15.0,  "sell_through_score": 0.20, "median_days_to_sell": 60 },
+  "yf-2001": { "est_sell_price_usd": 210.0, "sell_through_score": 0.75, "median_days_to_sell": 10 },
+  "yf-2002": { "est_sell_price_usd": 110.0, "sell_through_score": 0.66, "median_days_to_sell": 13 },
+  "yf-2003": { "est_sell_price_usd": 70.0,  "sell_through_score": 0.30, "median_days_to_sell": 45 }
+}
