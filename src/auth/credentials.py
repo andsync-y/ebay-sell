@@ -59,11 +59,14 @@ DEFAULT_HOME = default_home()
 
 
 def _ensure_dir(path: Path) -> None:
-    path.mkdir(parents=True, exist_ok=True)
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass  # read-only FS (e.g. Vercel sandbox) — caller will fail on write
     try:
         os.chmod(path, stat.S_IRWXU)  # 0700
     except OSError:
-        pass  # best-effort on platforms without POSIX perms
+        pass
 
 
 # --------------------------------------------------------------------------- #

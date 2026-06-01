@@ -1,50 +1,46 @@
 """Vercel entry point — Flask web API wrapping the yafu2ebay pipeline.
 
-Uses MemoryStore so there are ZERO filesystem writes. Fully stateless —
-safe for Vercel serverless / read-only sandbox environments.
-
-Optional env vars (set in Vercel dashboard for live data):
-  EBAY_CLIENT_ID / EBAY_CLIENT_SECRET / EBAY_RU_NAME
-  ANTHROPIC_API_KEY
-  YAFU2EBAY_WEBHOOK_URL   — Slack/LINE webhook for order notifications
+Fully stateless: uses MemoryStore (zero filesystem writes) so it works in
+Vercel's read-only sandbox. Credentials are not needed — falls back to
+sample data automatically.
 """
 
 from __future__ import annotations
 
+# ── Must be the very first executable lines ─────────────────────────────────
 import os
 import sys
+
+# Force writable path for any lib that touches home (Vercel home is read-only)
+os.environ["YAFU2EBAY_HOME"] = "/tmp/yafu2ebay"
+os.environ.setdefault("HOME", "/tmp")         # extra safety for any lib using HOME
+# ────────────────────────────────────────────────────────────────────────────
+
+import traceback
 from pathlib import Path
 
-# Repo root on path before any src imports.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from flask import Flask, jsonify, request
 
 from src.auth.credentials import MemoryStore
 from src.config import Config
-from src.comps import CompsProvider
-from src.compliance import ComplianceChecker
-from src.ebay import EbayClient
-from src.fx import FxProvider
-from src.generation import ListingGenerator
-from src.models import UserProfile
 from src.orders import OrderManager
 from src.pipeline import Pipeline
-from src.sources import available_sources, get_source
+from src.sources import available_sources
 from src.sync import ActiveListing, InventorySync
 
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 
-# Shared stateless objects (no file I/O).
 _store = MemoryStore()
 _config = Config.load()
 
 
-def _make_pipeline(user_id: str = "web-user") -> Pipeline:
+def _make_pipeline() -> Pipeline:
     return Pipeline(
-        user_id=user_id,
+        user_id="web-user",
         config=_config,
-        store=_store,          # ← MemoryStore: no filesystem writes
+        store=_store,
         allow_live_fx=True,
     )
 
@@ -87,17 +83,14 @@ def sources():
 @app.route("/api/run", methods=["POST"])
 def run():
     data = request.get_json(silent=True) or {}
-    source = data.get("source", "rakuten")
-    dest   = data.get("dest", "US")
+    source  = data.get("source", "rakuten")
+    dest    = data.get("dest", "US")
     keyword = data.get("keyword") or None
-    limit  = int(data.get("limit", 20))
-
+    limit   = int(data.get("limit", 20))
     try:
         pipeline = _make_pipeline()
-        plans = pipeline.run(
-            source_name=source, dest_country=dest,
-            keyword=keyword, limit=limit, publish=False,
-        )
+        plans = pipeline.run(source_name=source, dest_country=dest,
+                             keyword=keyword, limit=limit, publish=False)
         counts = {"auto_publish": 0, "draft_pending_photo": 0, "skip": 0}
         for p in plans:
             counts[p.action] = counts.get(p.action, 0) + 1
@@ -109,7 +102,8 @@ def run():
             "plans": [_plan_to_dict(p) for p in plans],
         })
     except Exception as exc:
-        return jsonify({"ok": False, "error": str(exc)}), 500
+        return jsonify({"ok": False, "error": str(exc),
+                        "trace": traceback.format_exc()}), 500
 
 
 @app.route("/api/orders")
@@ -134,7 +128,8 @@ def orders():
             ],
         })
     except Exception as exc:
-        return jsonify({"ok": False, "error": str(exc)}), 500
+        return jsonify({"ok": False, "error": str(exc),
+                        "trace": traceback.format_exc()}), 500
 
 
 @app.route("/api/sync")
@@ -158,7 +153,8 @@ def sync():
             ],
         })
     except Exception as exc:
-        return jsonify({"ok": False, "error": str(exc)}), 500
+        return jsonify({"ok": False, "error": str(exc),
+                        "trace": traceback.format_exc()}), 500
 
 
 if __name__ == "__main__":
