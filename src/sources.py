@@ -160,22 +160,84 @@ class RakutenSource(BaseSource):
 
 
 @register("yahoo")
-class YahooSource(BaseSource):
-    """Yahoo! Auctions (public pages).
+class YahooAuctionsSource(BaseSource):
+    """Yahoo! Auctions (Japan).
 
-    The official API is retired; sourcing is via the public listing pages.
-    We respect robots.txt and rate limits (monitoring.py). Login is NOT
-    required for sourcing. Without a live scraper configured we use sample
-    data. TODO (§2.14): implement a compliant scraper that honours the
-    site's terms and rate limits.
+    The official API requires Yahoo Japan Developer credentials. Falls back
+    to sample data when no client_id credential is configured.
+    TODO (§2.14): implement live RSS/API integration.
     """
 
     name = "yahoo"
 
     def search(self, keyword: Optional[str] = None, limit: int = 20) -> list[SourceItem]:
-        # No live scraper shipped; always sample for now (compliant default).
         items = self._load_sample("yahoo_items.json")
         if keyword:
             kw = keyword.lower()
             items = [i for i in items if kw in i.title.lower()]
         return items[:limit]
+
+
+@register("yahoo_shopping")
+class YahooShoppingSource(BaseSource):
+    """Yahoo! Shopping Japan.
+
+    Uses the Yahoo Shopping Item Search API when a client_id credential is
+    present. Falls back to sample data otherwise.
+    TODO (§2.14): wire the live endpoint + response mapping.
+    """
+
+    name = "yahoo_shopping"
+    API_URL = "https://shopping.yahooapis.jp/ShoppingWebService/V3/itemSearch"
+
+    def search(self, keyword: Optional[str] = None, limit: int = 20) -> list[SourceItem]:
+        cred = self._credential("yahoo_shopping")
+        client_id = cred.data.get("client_id") if cred else None
+
+        if not client_id:
+            items = self._load_sample("yahoo_shopping_items.json")
+            if keyword:
+                kw = keyword.lower()
+                items = [i for i in items if kw in i.title.lower()]
+            return items[:limit]
+
+        limiter = RateLimiter(calls_per_sec=1.0)
+        limiter.wait()
+        try:
+            import requests
+
+            params = {
+                "appid": client_id,
+                "query": keyword or "",
+                "results": min(limit, 50),
+                "sort": "-sold",
+            }
+            resp = requests.get(self.API_URL, params=params, timeout=30)
+            resp.raise_for_status()
+            payload = resp.json()
+            items = [self._map_item(e) for e in payload.get("hits", [])]
+            self.monitor.record(len(items))
+            return items[:limit]
+        except Exception as exc:
+            self.monitor.record_error(str(exc))
+            items = self._load_sample("yahoo_shopping_items.json")
+            if keyword:
+                kw = keyword.lower()
+                items = [i for i in items if kw in i.title.lower()]
+            return items[:limit]
+
+    def _map_item(self, e: dict) -> SourceItem:
+        brand_info = e.get("brand")
+        brand = brand_info.get("name") if isinstance(brand_info, dict) else None
+        return SourceItem(
+            source=self.name,
+            source_id=str(e.get("code", "")),
+            url=e.get("url", ""),
+            title=e.get("name", ""),
+            price_jpy=int(e.get("price", 0)),
+            condition="new",
+            brand=brand,
+            category=None,
+            upc=e.get("janCode"),
+            raw=e,
+        )
