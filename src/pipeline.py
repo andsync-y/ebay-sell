@@ -21,6 +21,7 @@ from .config import Config
 from .ebay import EbayClient
 from .fx import FxProvider
 from .generation import ListingGenerator
+from .history import HistoryStore, ListingRecord, now_iso
 from .models import ListingPlan, SourceItem, UserProfile
 from .pricing import choose_shipping, compute_price
 from .sources import get_source
@@ -46,6 +47,7 @@ class Pipeline:
         store: Optional[CredentialStore] = None,
         profile: Optional[UserProfile] = None,
         allow_live_fx: bool = True,
+        history: Optional[HistoryStore] = None,
     ):
         base_config = config or Config.load()
         self.store = store or get_default_store()
@@ -55,8 +57,9 @@ class Pipeline:
         self.profile = profile
         self.config = base_config.for_user(profile)
         self.user_id = user_id
+        self.history = history
 
-        self.comps = CompsProvider(user_id, self.store)
+        self.comps = CompsProvider(user_id, self.store, history=history)
         self.compliance = ComplianceChecker()
         self.generator = ListingGenerator(self.config, self._user_anthropic_key())
         self.ebay = EbayClient(self.config, user_id, self.store)
@@ -158,6 +161,28 @@ class Pipeline:
         src = get_source(source_name, self.user_id, self.store)
         items = src.search(keyword=keyword, limit=limit)
         plans = [self.plan_item(it, dest_country) for it in items]
+
+        # Record non-skip plans in history to build up training data.
+        if self.history:
+            ts = now_iso()
+            for plan in plans:
+                if plan.action == "skip":
+                    continue
+                p = plan.pricing
+                self.history.record_listing(ListingRecord(
+                    sku=plan.item.sku,
+                    source=plan.item.source,
+                    brand=plan.item.brand,
+                    category=plan.item.category,
+                    title=plan.title or plan.item.title,
+                    list_price_usd=p.list_price_usd if p else 0.0,
+                    cost_jpy=plan.item.price_jpy,
+                    usd_jpy=self.usd_jpy,
+                    photo_mode=plan.photo_mode,
+                    action=plan.action,
+                    listed_at=ts,
+                ))
+
         if publish:
             for plan in plans:
                 if plan.action == "auto_publish":
