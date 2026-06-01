@@ -26,6 +26,7 @@ from flask import Flask, Response, jsonify, request, stream_with_context
 
 from src.auth.credentials import MemoryStore
 from src.config import Config
+from src.history import HistoryStore, SaleRecord, now_iso
 from src.orders import OrderManager
 from src.pipeline import Pipeline
 from src.sources import available_sources
@@ -33,8 +34,9 @@ from src.sync import ActiveListing, InventorySync
 
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 
-_store = MemoryStore()
-_config = Config.load()
+_store   = MemoryStore()
+_config  = Config.load()
+_history = HistoryStore()   # module-level — persists across warm requests
 
 
 def _make_pipeline() -> Pipeline:
@@ -43,6 +45,7 @@ def _make_pipeline() -> Pipeline:
         config=_config,
         store=_store,
         allow_live_fx=True,
+        history=_history,
     )
 
 
@@ -206,6 +209,21 @@ def orders():
                 }
                 for o in order_list
             ],
+        })
+    except Exception as exc:
+        return jsonify({"ok": False, "error": str(exc),
+                        "trace": traceback.format_exc()}), 500
+
+
+@app.route("/api/history")
+def history():
+    try:
+        return jsonify({
+            "ok": True,
+            "summary":    _history.summary(),
+            "brands":     [vars(b) for b in _history.all_brand_stats()],
+            "categories": [vars(c) for c in _history.all_category_stats()],
+            "recent_sales": _history.recent_sales(limit=10),
         })
     except Exception as exc:
         return jsonify({"ok": False, "error": str(exc),

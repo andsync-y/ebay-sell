@@ -100,6 +100,23 @@
     .sync-action.end  { background: #450a0a; color: #fca5a5; }
     .sync-action.reprice { background: #1e3a5f; color: #93c5fd; }
 
+    /* ── History table ── */
+    .hist-summary { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .hist-stat { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; flex: 1; min-width: 100px; text-align: center; }
+    .hist-stat .hval { font-size: 1.3rem; font-weight: 700; color: var(--accent2); }
+    .hist-stat .hlbl { font-size: 0.68rem; color: var(--muted); }
+    .hist-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-bottom: 14px; }
+    .hist-table th { text-align: left; color: var(--muted); font-size: 0.68rem; text-transform: uppercase; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+    .hist-table td { padding: 7px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .hist-table tr:last-child td { border-bottom: none; }
+    .st-bar { display: flex; align-items: center; gap: 6px; }
+    .st-track { background: var(--border); border-radius: 3px; height: 5px; width: 60px; overflow: hidden; flex-shrink: 0; }
+    .st-fill  { height: 100%; background: var(--accent2); border-radius: 3px; }
+    .reliable-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+    .reliable-dot.yes { background: var(--accent2); }
+    .reliable-dot.no  { background: var(--border); }
+    .no-data { text-align: center; padding: 24px; color: var(--muted); font-size: 0.85rem; }
+
     /* ── Misc ── */
     .loader { text-align: center; padding: 28px; color: var(--muted); }
     .empty  { text-align: center; padding: 28px; color: var(--muted); }
@@ -141,6 +158,7 @@
   <button class="active" onclick="switchTab('run', this)">🔍 出品プラン</button>
   <button onclick="switchTab('orders', this)">📦 受注</button>
   <button onclick="switchTab('sync', this)">🔄 在庫同期</button>
+  <button onclick="switchTab('history', this)">📊 実績</button>
   <span id="running-badge" class="running-badge" style="display:none">⏳ 実行中...</span>
 </nav>
 
@@ -213,6 +231,16 @@
       <button class="btn green" onclick="loadOrders()">🔄 受注を取得</button>
     </div>
     <div id="orders-result"></div>
+  </div>
+
+  <!-- ===== HISTORY ===== -->
+  <div id="page-history" class="page">
+    <div class="card">
+      <h2>出品・売上実績</h2>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:12px;">蓄積されたデータが次回の商品選定・価格設定に自動的に反映されます。</p>
+      <button class="btn" onclick="loadHistory()">🔄 実績を更新</button>
+    </div>
+    <div id="history-result"></div>
   </div>
 
   <!-- ===== SYNC ===== -->
@@ -470,6 +498,110 @@ async function loadOrders() {
   } catch(e) {
     document.getElementById('orders-result').innerHTML = `<div class="error">エラー: ${e.message}</div>`;
   }
+}
+
+// ─── History ──────────────────────────────────────────────────────────────────
+async function loadHistory() {
+  document.getElementById('history-result').innerHTML = '<div class="loader">⏳ 読み込み中...</div>';
+  try {
+    const res  = await fetch('/api/history');
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    renderHistory(data);
+  } catch(e) {
+    document.getElementById('history-result').innerHTML = `<div class="error">エラー: ${e.message}</div>`;
+  }
+}
+
+function renderHistory(data) {
+  const s = data.summary;
+  const stPct = (s.sell_through_rate * 100).toFixed(0);
+  const profit = s.total_profit_jpy >= 0
+    ? `¥${s.total_profit_jpy.toLocaleString()}`
+    : `-¥${Math.abs(s.total_profit_jpy).toLocaleString()}`;
+
+  let html = `
+    <div class="hist-summary">
+      <div class="hist-stat"><div class="hval">${s.total_listings}</div><div class="hlbl">累計出品数</div></div>
+      <div class="hist-stat"><div class="hval">${s.total_sold}</div><div class="hlbl">売上件数</div></div>
+      <div class="hist-stat"><div class="hval">${stPct}%</div><div class="hlbl">売れ率</div></div>
+      <div class="hist-stat"><div class="hval" style="color:${s.total_profit_jpy>=0?'var(--accent2)':'var(--danger)'}">${profit}</div><div class="hlbl">累計利益</div></div>
+    </div>`;
+
+  if (!s.total_listings) {
+    html += `<div class="no-data">📭 まだデータがありません。<br>出品プランを生成すると自動的にデータが蓄積されます。</div>`;
+    document.getElementById('history-result').innerHTML = html;
+    return;
+  }
+
+  // Brand table
+  if (data.brands.length) {
+    html += `<div class="card"><h2>ブランド別実績</h2>
+      <p style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">
+        <span class="reliable-dot yes"></span> 信頼度十分（サンプル≥3件） &nbsp;
+        <span class="reliable-dot no"></span> データ蓄積中
+      </p>
+      <table class="hist-table">
+        <tr><th>ブランド</th><th>出品</th><th>売上</th><th>売れ率</th><th>平均利益</th><th>平均日数</th></tr>`;
+    for (const b of data.brands) {
+      const pct = (b.sell_through_rate * 100).toFixed(0);
+      const profit = b.avg_profit_jpy >= 0 ? `¥${Math.round(b.avg_profit_jpy).toLocaleString()}` : `-¥${Math.abs(Math.round(b.avg_profit_jpy)).toLocaleString()}`;
+      const days = b.avg_days_to_sell != null ? `${b.avg_days_to_sell}日` : '-';
+      html += `<tr>
+        <td><span class="reliable-dot ${b.is_reliable?'yes':'no'}"></span> ${b.brand}</td>
+        <td>${b.total_listed}</td>
+        <td>${b.total_sold}</td>
+        <td><div class="st-bar"><div class="st-track"><div class="st-fill" style="width:${pct}%"></div></div>${pct}%</div></td>
+        <td style="color:${b.avg_profit_jpy>=0?'var(--accent2)':'var(--danger)'}">${profit}</td>
+        <td>${days}</td>
+      </tr>`;
+    }
+    html += '</table></div>';
+  }
+
+  // Category table
+  if (data.categories.length) {
+    const catLabel = { sports:'🏃 スポーツ用品', watches:'⌚ 時計', electronics:'💡 家電',
+                       toys:'🎮 玩具', fashion:'👕 ファッション', home:'🏠 インテリア',
+                       collectibles:'🏺 コレクション' };
+    html += `<div class="card"><h2>カテゴリ別実績</h2>
+      <table class="hist-table">
+        <tr><th>カテゴリ</th><th>出品</th><th>売上</th><th>売れ率</th><th>平均利益</th></tr>`;
+    for (const c of data.categories) {
+      const pct = (c.sell_through_rate * 100).toFixed(0);
+      const profit = c.avg_profit_jpy >= 0 ? `¥${Math.round(c.avg_profit_jpy).toLocaleString()}` : `-¥${Math.abs(Math.round(c.avg_profit_jpy)).toLocaleString()}`;
+      html += `<tr>
+        <td><span class="reliable-dot ${c.is_reliable?'yes':'no'}"></span> ${catLabel[c.category]||c.category}</td>
+        <td>${c.total_listed}</td>
+        <td>${c.total_sold}</td>
+        <td><div class="st-bar"><div class="st-track"><div class="st-fill" style="width:${pct}%"></div></div>${pct}%</div></td>
+        <td style="color:${c.avg_profit_jpy>=0?'var(--accent2)':'var(--danger)'}">${profit}</td>
+      </tr>`;
+    }
+    html += '</table></div>';
+  }
+
+  // Recent sales
+  if (data.recent_sales.length) {
+    html += `<div class="card"><h2>最近の売上</h2>`;
+    for (const sale of data.recent_sales) {
+      const profit = Math.round(sale.sold_price_usd * sale.usd_jpy - sale.cost_jpy);
+      const profitStr = profit >= 0 ? `+¥${profit.toLocaleString()}` : `-¥${Math.abs(profit).toLocaleString()}`;
+      html += `<div class="sync-row">
+        <div>
+          <div style="font-size:0.83rem">${sale.title||sale.sku}</div>
+          <div style="font-size:0.7rem;color:var(--muted)">${sale.brand||''} ${sale.sold_at?.slice(0,10)||''} ${sale.days_to_sell!=null?`・${sale.days_to_sell}日で売却`:''}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:0.85rem">$${sale.sold_price_usd}</div>
+          <div style="font-size:0.75rem;color:${profit>=0?'var(--accent2)':'var(--danger)'}">${profitStr}</div>
+        </div>
+      </div>`;
+    }
+    html += '</div>';
+  }
+
+  document.getElementById('history-result').innerHTML = html;
 }
 
 // ─── Sync ─────────────────────────────────────────────────────────────────────
